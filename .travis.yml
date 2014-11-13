@@ -4,5 +4,5 @@ compiler:
   - clang
 
 before_install: sudo apt-get install libglib2.0-dev
-script: autoreconf -i && ./configure --enable-uni-tests && make && make check
+script: autoreconf -i && ./configure --enable-unit-tests && make && make check
 
