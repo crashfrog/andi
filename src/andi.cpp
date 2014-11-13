@@ -53,7 +53,7 @@ void version(void);
  * to processing.
  */
 int main( int argc, char *argv[]){
-	int c, i;
+	int c;
 	int version_flag = 0;
 	
 	static struct option long_options[] = {
@@ -96,7 +96,7 @@ int main( int argc, char *argv[]){
 					double prop = strtod( optarg, &end);
 
 					if( errno || end == optarg || *end != '\0'){
-						WARN(
+						warnx(
 							"Expected a floating point number for -p argument, but '%s' was given. "
 							"Skipping argument.", optarg
 						);
@@ -104,7 +104,7 @@ int main( int argc, char *argv[]){
 					}
 
 					if( prop < 0.0 || prop > 1.0 ){
-						WARN(
+						warnx(
 							"A probability should be a value between 0 and 1; "
 							"Ignoring -p %f argument.", prop
 						);
@@ -128,7 +128,7 @@ int main( int argc, char *argv[]){
 					long unsigned int threads = strtoul( optarg, &end, 10);
 
 					if( errno || end == optarg || *end != '\0'){
-						WARN(
+						warnx(
 							"Expected a number for -t argument, but '%s' was given. "
 							"Ignoring -t argument.", optarg
 						);
@@ -136,7 +136,7 @@ int main( int argc, char *argv[]){
 					}
 
 					if( threads > (long unsigned int) omp_get_num_procs() ){
-						WARN(
+						warnx(
 							"The number of threads to be used, is greater then the number of available processors; "
 							"Ignoring -t %lu argument.", threads
 						);
@@ -157,65 +157,47 @@ int main( int argc, char *argv[]){
 	if( version_flag ){
 		version();
 	}
+
+	argc -= optind;
+	argv += optind;
+
+	// at least one file name must be given
+	if( FLAGS & F_JOIN && argc == 0 ){
+		errx(1, "In join mode at least one filename needs to be supplied.");
+	}
 	
 	dsa_t *dsa = dsa_new();
 	FILE *in = NULL;
-	
-	if( FLAGS & F_JOIN ){
-		// at least one file name must be given
-		if( optind == argc ){
-			FAIL("In join mode at least one filename needs to be supplied.");
-		}
-		
-		// only one file
-		if( optind + 1 == argc ){
-			in = stdin;
-			joinedRead( in, dsa, strdup("stdin"));
-		}
-		
-		// parse all files
-		for( i=optind; i< argc; i++){
-			in = fopen( argv[i], "r");
-			if( !in) continue;
-			
-			/* In join mode we try to be clever about the sequence name. Given the file
-			 * path we extract just the file name. ie. path/file.ext -> file
-			 * This obviously fails on Windows.
-			 */
-			char *filename = argv[i];
-			char *left = strrchr( filename, '/');
-			left = (left == NULL) ? filename : left + 1;
-			
-			char *dot = strchrnul( left, '.');
-			
-			filename = strndup( left, dot-left );
+	const char *name;
 
-			if( filename){
-				joinedRead( in, dsa, filename);
+	// parse all files
+	int minfiles = FLAGS & F_JOIN ? 2 : 1;
+	for( ; ; minfiles-- ){
+		if( !*argv){
+			if( minfiles <= 0) break;
+
+			// if no files are supplied, read from stdin
+			in = stdin;
+			name = "stdin";
+		} else {
+			name = *argv++;
+			in = fopen( name, "r");
+			if( !in) {
+				warn("%s", name);
+				continue;
 			}
-
-			free(filename);
-			fclose(in);
 		}
-		
-	} else {
-		// if no files are supplied, read from stdin
-		if( optind == argc){
-			in = stdin;
-			readFile( in, dsa );
-		}
-	
-		// parse all files
-		for( i=optind; i< argc; i++){
-			in = fopen( argv[i], "r");
-			if( !in) continue;
 
+		if( FLAGS & F_JOIN){
+			joinedRead( in, dsa, name);
+		} else {
 			readFile( in, dsa);
-
-			fclose(in);
 		}
+
+		fclose(in);
 	}
-	
+
+
 	size_t n = dsa_size( dsa);
 	
 	if( FLAGS & F_VERBOSE){
@@ -228,7 +210,7 @@ int main( int argc, char *argv[]){
 	if( n >= 2){
 		calcDistMatrix(sequences, n);
 	} else {
-		WARN("I am truly sorry, but with less than two sequences (%lu given) there is nothing to compare.", n);
+		warnx("I am truly sorry, but with less than two sequences (%lu given) there is nothing to compare.", n);
 	}
 
 	dsa_free( dsa);
