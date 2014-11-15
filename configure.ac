@@ -1,4 +1,4 @@
-AC_INIT([andi], [0.7.3])
+AC_INIT([andi], [0.7.4-beta])
 AM_INIT_AUTOMAKE([-Wall foreign ])
 
 AC_PROG_CXX
@@ -35,7 +35,7 @@ if test "x${try_unit_tests}" = xyes; then
 fi
 
 # Check for various headers including those used by libdivsufsort.
-AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h stdint.h inttypes.h err.h])
+AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h stdint.h inttypes.h err.h errno.h])
 
 AC_C_INLINE
 AC_TYPE_SIZE_T
