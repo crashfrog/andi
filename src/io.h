@@ -7,6 +7,7 @@
 
 #include <err.h>
 #include <errno.h>
+#include <stdio.h>
 #include "sequence.h"
 
 typedef struct data_s {

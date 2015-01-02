@@ -26,10 +26,10 @@
  * applied to big data sets.
  */
 #include <stdlib.h>
-#include <RMQ.hpp>
 #include <string.h>
 #include <assert.h>
 #include "esa.h"
+#include "rmq.h"
 
 lcp_inter_t get_match_from( const esa_t *C, const char *query, size_t qlen, saidx_t k, lcp_inter_t ij);
 static lcp_inter_t *get_interval_FVC( const esa_t *C, lcp_inter_t *ij, char a);
@@ -86,7 +86,7 @@ int esa_init_cache( esa_t *C){
 	char str[CACHE_LENGTH+1];
 	str[CACHE_LENGTH] = '\0';
 	lcp_inter_t ij = { 0, 0, C->len-1, 0};
-	ij.m = C->rmq_lcp->query(1,C->len-1);
+	ij.m = rmq(C,1,C->len-1);
 	esa_init_cache_dfs( C, str, 0, &ij);
 
 	return 0;
@@ -175,7 +175,7 @@ void esa_init_cache_fill( esa_t *C, char *str, size_t pos, const lcp_inter_t *in
 		C->cache[code] = *in;
 
 		if( in->i != in->j){
-			C->cache[code].m = C->rmq_lcp->query(in->i+1, in->j);
+			C->cache[code].m = rmq(C,in->i+1, in->j);
 		}
 	}
 }
@@ -229,7 +229,8 @@ int esa_init( esa_t *C, seq_t *S){
 	if(result) return result;
 
 	// TODO: check return value/ catch errors
-	C->rmq_lcp = new RMQ_n_1_improved(C->LCP, C->len);
+	result = rmq_init(C);
+	if(result) return result;
 
 	result = esa_init_FVC(C);
 	if( result) return result;
@@ -242,7 +243,7 @@ int esa_init( esa_t *C, seq_t *S){
 
 /** @brief Free the private data of an ESA. */
 void esa_free( esa_t *C){
-	delete C->rmq_lcp;
+	rmq_free(C);
 	free( C->SA);
 	free( C->LCP);
 	free( C->cache);
@@ -353,7 +354,7 @@ int esa_init_LCP( esa_t *C){
  * @param a The next character in the query sequence.
  * @returns A reference to the new LCP interval.
  */
-static lcp_inter_t *get_interval_FVC( const esa_t *C, lcp_inter_t *ij, char a){
+static lcp_inter_t* get_interval_FVC( const esa_t *C, lcp_inter_t *ij, char a){
 	saidx_t i = ij->i;
 	saidx_t j = ij->j;
 
@@ -362,7 +363,6 @@ static lcp_inter_t *get_interval_FVC( const esa_t *C, lcp_inter_t *ij, char a){
 	const saidx_t *LCP = C->LCP;
 	const char *S = C->S;
 	const char *FVC= C->FVC;
-	RMQ *rmq_lcp = C->rmq_lcp;
 	
 	// check for singleton or empty interval
 	if( i == j ){
@@ -393,7 +393,7 @@ static lcp_inter_t *get_interval_FVC( const esa_t *C, lcp_inter_t *ij, char a){
 		}
 		
 		// find the next LCP boundary
-		m = rmq_lcp->query(i+1, j);
+		m = rmq(C, i+1, j);
 	} while( LCP[m] == l);
 
 	// final sanity check
@@ -431,7 +431,7 @@ lcp_inter_t get_match( const esa_t *C, const char *query, size_t qlen){
 	lcp_inter_t ij = { 0, 0, C->len-1, 0};
 	
 	// TODO: This should be cached in a future version
-	ij.m = C->rmq_lcp->query(1,C->len-1);
+	ij.m = rmq(C,1,C->len-1);
 
 	return get_match_from(C, query, qlen, 0, ij);
 }

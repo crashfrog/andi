@@ -3,6 +3,8 @@
 #include "global.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 
 int FLAGS = F_NONE;
 

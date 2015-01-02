@@ -7,10 +7,9 @@
 #define _ESA_H_
 
 #include <divsufsort.h>
-#include <RMQ.hpp>
-#include <RMQ_n_1_improved.hpp>
-
+#include <stddef.h>
 #include "sequence.h"
+#include <sys/types.h>
 
 /**
  * @brief Represents LCP-Intervals.
@@ -52,7 +51,7 @@ typedef struct {
 	/** The length of the string S. */
 	saidx_t len;
 	/** A reference to an object for range minimum queries. */
-	RMQ *rmq_lcp;
+	void *rmq_lcp;
 	/** A cache for lcp-intervals */
 	lcp_inter_t *cache;
 	/** The FVC array holds the character after the LCP. */
