@@ -148,6 +148,8 @@ data_t dist_anchor( const esa_t *C, const char *query, size_t query_length, doub
 	size_t this_pos_Q = 0;
 	size_t this_pos_S;
 	size_t this_length;
+
+	double last_avg = 1.0;
 	
 	size_t num_right_anchors = 0;
 
@@ -198,6 +200,16 @@ data_t dist_anchor( const esa_t *C, const char *query, size_t query_length, doub
 				}
 				homo += this_pos_Q - last_pos_Q;
 				last_was_right_anchor = 1;
+
+				if ((double)homo/query_length >= CONVERGENCE){
+					// check
+					double avg = (double)snps/homo;
+					if( last_avg * (1.0 - PRECISION) < avg &&
+						avg < last_avg * (1.0 + PRECISION) ){
+						break;
+					}
+					last_avg = avg;
+				}
 			} else {
 				if( last_was_right_anchor){
 					// If the last was a right anchor, but with the current one, we 

@@ -41,6 +41,8 @@
 int FLAGS = 0;
 int THREADS = 1;
 double RANDOM_ANCHOR_PROP = 0.05;
+double CONVERGENCE = 0.8;
+double PRECISION = 0.05;
 
 void usage(void);
 void version(void);
@@ -71,7 +73,7 @@ int main( int argc, char *argv[]){
 	
 		int option_index = 0;
 		
-		c = getopt_long( argc, argv, "jvhrt:p:m", long_options, &option_index);
+		c = getopt_long( argc, argv, "jvhrt:p:mc:q:", long_options, &option_index);
 		
 		if( c == -1){
 			break;
@@ -88,6 +90,56 @@ int main( int argc, char *argv[]){
 				break;
 			case 'v':
 				FLAGS |= FLAGS & F_VERBOSE ? F_EXTRA_VERBOSE : F_VERBOSE;
+				break;
+			case 'c':
+				{
+					errno = 0;
+					char *end;
+					double prop = strtod( optarg, &end);
+
+					if( errno || end == optarg || *end != '\0'){
+						warnx(
+							"Expected a floating point number for -p argument, but '%s' was given. "
+							"Skipping argument.", optarg
+						);
+						break;
+					}
+
+					if( prop < 0.0 || prop > 1.0 ){
+						warnx(
+							"A probability should be a value between 0 and 1; "
+							"Ignoring -p %f argument.", prop
+						);
+						break;
+					}
+
+					CONVERGENCE = prop;
+				}
+				break;
+			case 'q':
+				{
+					errno = 0;
+					char *end;
+					double prop = strtod( optarg, &end);
+
+					if( errno || end == optarg || *end != '\0'){
+						warnx(
+							"Expected a floating point number for -p argument, but '%s' was given. "
+							"Skipping argument.", optarg
+						);
+						break;
+					}
+
+					if( prop < 0.0 || prop > 1.0 ){
+						warnx(
+							"A probability should be a value between 0 and 1; "
+							"Ignoring -p %f argument.", prop
+						);
+						break;
+					}
+
+					PRECISION = prop;
+				}
 				break;
 			case 'p':
 				{

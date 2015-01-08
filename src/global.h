@@ -28,6 +28,9 @@ extern int THREADS;
  */
 extern double RANDOM_ANCHOR_PROP;
 
+extern double CONVERGENCE;
+extern double PRECISION;
+
 /** 
  * This enum contains the available flags. Please note that all
  * available options are a power of 2.
