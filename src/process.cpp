@@ -149,7 +149,8 @@ data_t dist_anchor( const esa_t *C, const char *query, size_t query_length, doub
 	size_t this_pos_S;
 	size_t this_length;
 
-	double last_avg = 1.0;
+	double avg_avg_numerator = 0;
+	double avg_avg_denominator = 0;
 	
 	size_t num_right_anchors = 0;
 
@@ -204,11 +205,18 @@ data_t dist_anchor( const esa_t *C, const char *query, size_t query_length, doub
 				if ((double)homo/query_length >= CONVERGENCE){
 					// check
 					double avg = (double)snps/homo;
-					if( last_avg * (1.0 - PRECISION) < avg &&
-						avg < last_avg * (1.0 + PRECISION) ){
-						break;
+					if( avg_avg_numerator == 0){
+						avg_avg_numerator = avg;
+						avg_avg_denominator = 1;
+					} else {
+						double avg_avg = avg_avg_numerator/avg_avg_denominator;
+						if( avg_avg * (1.0 - PRECISION) < avg &&
+							avg < avg_avg * (1.0 + PRECISION) ){
+							break;
+						}
+						avg_avg_numerator += avg;
+						avg_avg_denominator++;
 					}
-					last_avg = avg;
 				}
 			} else {
 				if( last_was_right_anchor){
