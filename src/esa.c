@@ -501,7 +501,9 @@ static lcp_inter_t *get_interval_FVC( const esa_t *C, lcp_inter_t *ij, char a){
 	} while ( /*m != "bottom" && */ LCP[m] == l);
 
 	// final sanity check
-	if( i != ij->i ? FVC[i] == a : S[SA[i] + l] == a){
+	if( i != ij->i ? 
+		FVC[i] == a :
+		 S[SA[i] + l] == a){
 		ij->i = i;
 		ij->j = j;
 		/* Also return the length of the LCP interval including `a` and
